@@ -113,3 +113,45 @@ func (app *application) deleteEvent(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusNoContent, nil)
 }
+
+func (app *application) addAttendeeToEvent(ctx *gin.Context) {
+	eventId, err := strconv.Atoi(ctx.Param("id"))
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event id"})
+		return
+	}
+	
+	userId, err := strconv.Atoi(ctx.Param("userId"))
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user id"})
+		return
+	}
+	
+	event, err := app.models.Events.Get(eventId)
+	
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve event"})
+		return
+	}
+	
+	if event == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "Event not found"})
+		return
+	}
+	
+	
+	userToAdd, err := app.models.Users.Get(userId)
+	
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user"})
+		return
+	}
+	
+	if userToAdd == nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+	
+}	

@@ -74,7 +74,7 @@ func (e *EventModel) Get(id int) (*Event, error) {
 	defer cancel()
 
 	query := "SELECT * FROM events WHERE id = $1"
-
+	
 	var event Event
 
 	err := e.DB.QueryRowContext(ctx, query, id).Scan(
