@@ -153,5 +153,45 @@ func (app *application) addAttendeeToEvent(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-	
+
+	existingAttendee, err := app.models.Attendees.GetByEventAndAttendee(event.Id, userToAdd.Id)
+
+	if existingAttendee != nil {
+		ctx.JSON(http.StatusConflict, gin.H{"error": "Attendee already exists"})
+		return
+	}
+
+	attendee := database.Attendee{
+		EventId: event.Id,
+		UserId: userToAdd.Id,
+	}
+
+	_, err = app.models.Attendees.Insert(&attendee)
+
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add attendee"})
+	}
+
+	ctx.JSON(http.StatusCreated, attendee)
 }	
+
+
+func (app * application) getAttendeesForEvent(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event id"})
+		return
+	}
+
+	users, err := app.models.Attendees.GetAttendeesByEvent(id)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve attendees for event"})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+
+}
