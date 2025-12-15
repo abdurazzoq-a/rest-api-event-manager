@@ -156,6 +156,11 @@ func (app *application) addAttendeeToEvent(ctx *gin.Context) {
 
 	existingAttendee, err := app.models.Attendees.GetByEventAndAttendee(event.Id, userToAdd.Id)
 
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	if existingAttendee != nil {
 		ctx.JSON(http.StatusConflict, gin.H{"error": "Attendee already exists"})
 		return
@@ -177,7 +182,7 @@ func (app *application) addAttendeeToEvent(ctx *gin.Context) {
 }	
 
 
-func (app * application) getAttendeesForEvent(c *gin.Context) {
+func (app *application) getAttendeesForEvent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
