@@ -46,3 +46,7 @@ func (app *application) registerUser(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, user)
 }
+
+func (app *application) health(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
+}

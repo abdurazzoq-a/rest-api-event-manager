@@ -14,9 +14,9 @@ type Event struct {
 	Id          int    `json:"id"`
 	OwnerId     int    `json:"ownerId" binding:"required"`
 	Name        string `json:"name" binding:"required,min=3"`
-	Description string `json:"description" binding:"required, min=10"`
-	Date        string `json:"date" binding:"required, datetime=2006-01-02"`
-	Location    string `json:"location" binding:"required, min=3"`
+	Description string `json:"description" binding:"required,min=10"`
+	Date        string `json:"date" binding:"required,datetime=2006-01-02"`
+	Location    string `json:"location" binding:"required,min=3"`
 }
 
 func (m *EventModel) Insert(event *Event) error {
@@ -25,7 +25,7 @@ func (m *EventModel) Insert(event *Event) error {
 
 	query := `
 		INSERT INTO events (owner_id, name, description, date, location) 
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4, $5) RETURNING id
 	`
 
 	return m.DB.QueryRowContext(ctx, query,
@@ -53,6 +53,7 @@ func (e EventModel) GetAll() ([]*Event, error) {
 
 		err := rows.Scan(
 			&event.Id,
+			&event.OwnerId,
 			&event.Name,
 			&event.Description,
 			&event.Date,
@@ -74,7 +75,7 @@ func (e *EventModel) Get(id int) (*Event, error) {
 	defer cancel()
 
 	query := "SELECT * FROM events WHERE id = $1"
-	
+
 	var event Event
 
 	err := e.DB.QueryRowContext(ctx, query, id).Scan(
@@ -105,10 +106,11 @@ func (e *EventModel) Update(event *Event) error {
 	query := "UPDATE events SET name = $1, description = $2, date = $3, location = $4 WHERE id = $5"
 
 	_, err := e.DB.ExecContext(ctx, query,
-		event.Name,
-		event.Description,
-		event.Date,
-		event.Location,
+		&event.Name,
+		&event.Description,
+		&event.Date,
+		&event.Location,
+		event.Id,
 	)
 
 	if err != nil {
