@@ -26,12 +26,32 @@ func (u *UserModel) Insert(user *User) error {
 	return u.DB.QueryRowContext(ctx, query, user.Email, user.Password, user.Name).Scan(&user.Id)
 }
 
+func (u *UserModel) getUser(query string, args ...interface{}) (*User, error) {
 
-func (u *UserModel) Get(userId int) (*User, error) {
-	// ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-	// defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
 
-	// query := "SELECT * FROM users WHERE id = $1"
+	var user User
 
-	return nil, nil
+	err := u.DB.QueryRowContext(ctx, query, args...).Scan(&user.Id, &user.Email, &user.Name, &user.Password)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (u *UserModel) GetUserById(id int) (*User, error) {
+	query := "SELECT * FROM users WHERE id = $1"
+	return u.getUser(query, id)
+}
+
+func (u *UserModel) GetUserByEmail(email string) (*User, error) {
+	query := "SELECT * FROM users WHERE email = $1"
+	return u.getUser(query, email)
 }

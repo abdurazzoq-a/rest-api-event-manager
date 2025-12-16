@@ -143,7 +143,7 @@ func (app *application) addAttendeeToEvent(ctx *gin.Context) {
 		return
 	}
 
-	userToAdd, err := app.models.Users.Get(userId)
+	userToAdd, err := app.models.Users.GetUserById(userId)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user"})
@@ -175,7 +175,8 @@ func (app *application) addAttendeeToEvent(ctx *gin.Context) {
 	_, err = app.models.Attendees.Insert(&attendee)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add attendee"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to add attendee", "error": err.Error()})
+		return
 	}
 
 	ctx.JSON(http.StatusCreated, attendee)
@@ -192,10 +193,52 @@ func (app *application) getAttendeesForEvent(c *gin.Context) {
 	users, err := app.models.Attendees.GetAttendeesByEvent(id)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve attendees for event"})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve attendees for event", "error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, users)
+}
 
+func (app *application) deleteAttendeeFromEvent(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event id"})
+		return
+	}
+
+	userId, err := strconv.Atoi(ctx.Param("userId"))
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user id"})
+		return
+	}
+
+	err = app.models.Attendees.Delete(userId, id)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to delete attendee", "error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusNoContent, nil)
+}
+
+func (app *application) getEventsByAttendee(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid attendee id"})
+		return
+	}
+
+	events, err := app.models.Attendees.GetEventsByAttendee(id)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve events", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, events)
 }

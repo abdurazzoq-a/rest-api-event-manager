@@ -135,6 +135,3 @@ func (e *EventModel) Delete(id int) error {
 	return nil
 }
 
-// func (e EventModel) Insert(event *Event) any {
-// 	panic("unimplemented")
-// }
